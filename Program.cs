@@ -1,10 +1,11 @@
-﻿using FlightInfo;
+﻿using System.Collections.Immutable;
+using FlightInfo;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 Dictionary<string, Airline> airlines = new Dictionary<string, Airline>();
 Dictionary<string, BoardingGate> boardingGates = new Dictionary<string, BoardingGate>();
 Dictionary<string, Flight> flights = new Dictionary<string, Flight>();
-Dictionary<string, string> gateAssignments = new Dictionary<string, string>();
+
 
 //1
 //Load Airline.csv
@@ -28,6 +29,7 @@ while (!(bg.EndOfStream))
 sr.Close();
 
 //2
+//load flights
 StreamReader fl = new StreamReader("flights.csv");
 fl.ReadLine();
 while (!(fl.EndOfStream))
@@ -60,11 +62,12 @@ Terminal terminal = new Terminal("Terminal 5",airlines,flights,boardingGates);
 
 //assignToAirline(flights,airlines);
 //ListAllBoardingGates(boardingGates, gateAssignments);
-while (true) {
-    //assignboardingGateToflight(flights, boardingGates, gateAssignments);
-    CreateNewFlight(flights);
-}
-
+//while (true) {
+//    //assignboardingGateToflight(flights, boardingGates);
+//    //CreateNewFlight(flights);
+   
+//}
+displayscheduledFlight(flights);
 
 //3
 //assign flight to airline
@@ -88,19 +91,19 @@ void assignToAirline(Dictionary<string, Flight> flights,Dictionary<string,Boardi
   
 //4
 //displayBoardingGate
-void ListAllBoardingGates(Dictionary<string, BoardingGate> boardingGates, Dictionary<string, string> gateAssignments)
+void ListAllBoardingGates(Dictionary<string, BoardingGate> boardingGates)
 {
     Console.WriteLine($"{"Gate Name",-10} {"Supports DDJB",-15} {"Supports CFFT",-15} {"Supports LWTT",-15}");
 
     foreach (var gate in boardingGates.Values)
     {
-        string assignedFlight = gateAssignments.ContainsKey(gate.GateName) ? gateAssignments[gate.GateName] : "None";
         Console.WriteLine($"{gate.GateName,-10} {gate.SupportDDJB,-15} {gate.SupportCFFT,-15} {gate.SupportLWTT,-15}");
     }
 }
 
 //5
-void assignboardingGateToflight(Dictionary<string, Flight> flights, Dictionary<string, BoardingGate> boardingGates, Dictionary<string, string> gateAssignments)
+//assign boardinggate to flight
+void assignboardingGateToflight(Dictionary<string, Flight> flights, Dictionary<string, BoardingGate> boardingGates)
 {
     Console.Write("Enter Flight Number to assign a boarding gate: ");
     string flightNo = Console.ReadLine();
@@ -136,22 +139,22 @@ void assignboardingGateToflight(Dictionary<string, Flight> flights, Dictionary<s
             Console.WriteLine($"Boarding Gate {boardingGateName} does not exist.");
             continue;
         }
-
-        if (gateAssignments.ContainsKey(boardingGateName))
+        Gate = boardingGates[boardingGateName];
+        
+        if (Gate.F != null)
         {
-            Console.WriteLine($"Boarding Gate {boardingGateName} is already assigned to Flight {gateAssignments[boardingGateName]}. Please choose another gate.");
+            Console.WriteLine($"Boarding Gate {boardingGateName} is already assigned to Flight {Gate.F.FlightNumber}. Please choose another gate.");
             continue;
         }
         BoardingGate gate = boardingGates[boardingGateName];
         Console.WriteLine($"Boarding Gate Information:\nName: {gate.GateName}\nSupports DDJB: {gate.SupportDDJB}\nSupports CFFT: {gate.SupportCFFT}\nSupports LWTT: {gate.SupportLWTT}");
         if (!checkSRC(gate, fl))
         {
-            Console.WriteLine("Error: This gate does not support the flight's special request. Please choose another gate.");
+            Console.WriteLine("This gate does not support the flight's special request. Please choose another gate.");
             continue;
         }
 
         // If all checks pass, assign the gate
-        gateAssignments[boardingGateName] = flightNo;
         Console.WriteLine($"Success: Flight {fl.FlightNumber} successfully assigned to Gate {boardingGateName}.");
         break;
 
@@ -174,10 +177,7 @@ void assignboardingGateToflight(Dictionary<string, Flight> flights, Dictionary<s
 
         }
         Console.WriteLine($"Flight {fl.FlightNumber} updated successfully.");
-        Console.WriteLine($"Flight Status: {fl.Status}");
-        Console.WriteLine($"Assigned Gate: {boardingGateName}");
-        
-    
+  
 }
 
 //check whether boarding gate support Special Request
@@ -293,6 +293,41 @@ void CreateNewFlight(Dictionary<string, Flight> flights)
         addAnotherFlight = addAnotherChoice == "Y";
     }
     Console.WriteLine("All new flights have been successfully added.");
+}
+
+//9
+//Sorting
+string getBoardingGateFromFlight(Flight flight)
+{
+    string gateName = "";
+    bool flag = false;
+    foreach (var bg in boardingGates.Values)
+    {
+        if (bg.F != null)
+        {
+            if (bg.F.FlightNumber == flight.FlightNumber)
+            {
+                gateName = bg.GateName;
+                flag = true;
+                break;
+            }
+        }
+
+    }
+    if (!flag)
+    {
+        gateName = "Unassigned";
+    }
+    return gateName;
+}
+void displayscheduledFlight(Dictionary<string, Flight> flights)
+{
+    var sortedFlights = flights.Values.OrderBy(f => f.ExpectedDateTime);
+    Console.WriteLine($"{"Flight Number",-14} {"Airline Name",-20} {"Origin",-22} {"Destination",-18} {"Expected Departure/Arrival Time",-35} {"Status",-10} {"Boarding Gate",-15}");
+    foreach (var flight in sortedFlights)
+    {
+        Console.WriteLine($"{flight.FlightNumber,-14} {airlines[flight.FlightNumber.Substring(0, 2)].Name,-20} {flight.Origin,-22} {flight.Destination,-18} {flight.ExpectedDateTime,-35} {flight.Status,-10} {getBoardingGateFromFlight(flight),-15}");
+    }
 }
 
 

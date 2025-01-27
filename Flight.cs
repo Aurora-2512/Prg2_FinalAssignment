@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FlightInfo
 {
-    internal class Flight
+    internal class Flight: IComparable<Flight>
     {
         private string flightNumber;
         private string origin;
@@ -30,7 +30,7 @@ namespace FlightInfo
             Origin = origin;
             Destination = destination;
             ExpectedDateTime = expectedDateTime;
-            Status = "on Time";
+            Status = "Scheduled";
             
         }
 
@@ -52,6 +52,11 @@ namespace FlightInfo
         public override string? ToString()
         {
             return $"Flight Number: {FlightNumber}\nOrigin: {Origin}\nDestination: {Destination}\nExpected Time: {ExpectedDateTime}\nStatus: {Status}\n";
+        }
+
+        public int CompareTo(Flight? other)
+        {
+            return expectedDateTime.CompareTo(other.expectedDateTime);
         }
     }
 }
