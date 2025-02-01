@@ -236,9 +236,13 @@ void assignboardingGateToflight(Dictionary<string, Flight> flights, Dictionary<s
         {
             case 1: fl.Status = "Delayed"; break;
             case 2: fl.Status = "Boarding"; break;
-            case 3: default: fl.Status = "On Time"; break;
+            case 3: fl.Status = "On Time"; break;
         }
-
+        
+    }
+    else
+    {
+        fl.Status = "On Time";
     }
     Console.WriteLine($"Flight {fl.FlightNumber} updated successfully.");
 
@@ -667,7 +671,8 @@ void processingUnassignedFlight(Dictionary<string, Flight> flights, Dictionary<s
         {
             if ((specialRequest == "DDJB" && gate.SupportDDJB) ||
                 (specialRequest == "CFFT" && gate.SupportCFFT) ||
-                (specialRequest == "LWTT" && gate.SupportLWTT))
+                (specialRequest == "LWTT" && gate.SupportLWTT) ||
+                (specialRequest == "None" && !gate.SupportLWTT && !gate.SupportDDJB && !gate.SupportCFFT))
             {
                 assignedGate = gate;
                 break;
@@ -687,6 +692,25 @@ void processingUnassignedFlight(Dictionary<string, Flight> flights, Dictionary<s
 
         if (assignedGate != null)
         {
+            Console.WriteLine("Would you like to update the status of the flight? (Y / N)");
+            string opt = Console.ReadLine();
+            string flightStatus = "";
+            if (opt.ToUpper() == "Y")
+            {
+                Console.WriteLine("1. Delayed\n2. Boarding\n3. On Time\nPlease select the new status of the flight:\n");
+                int statusNo = int.Parse(Console.ReadLine());
+                switch (statusNo)
+                {
+                    case 1: flightStatus = "Delayed"; break;
+                    case 2: flightStatus = "Boarding"; break;
+                    case 3: flightStatus = "On Time"; break;
+                }
+            }
+            else
+            {
+                flightStatus = "On Time";
+            }
+            flight.Status = flightStatus;
             assignedGate.F = flight;
             processedFlights++;
             processedGates++;
@@ -694,10 +718,15 @@ void processingUnassignedFlight(Dictionary<string, Flight> flights, Dictionary<s
             Console.WriteLine($"Flight {flight.FlightNumber} assigned to Gate {assignedGate.GateName}");
         }
 
-        int totalFlights = flights.Count;
-        int totalGates = boardingGates.Count;
 
-        double percentageFlightProcessed = (processedFlights / (double)totalFlights) * 100;
-        double percentageGateProcessed = (processedGates / (double)totalGates) * 100;
     }
+    int totalFlights = flights.Count;
+    int totalGates = boardingGates.Count;
+
+    double percentageFlightProcessed = (processedFlights / (double)totalFlights) * 100;
+    double percentageGateProcessed = (processedGates / (double)totalGates) * 100;
+
+    Console.WriteLine($"Percentage of flight processed: {percentageFlightProcessed:F0}%");
+    Console.WriteLine($"Percentage of flight processed: {percentageGateProcessed:F0}%");
+    displayscheduledFlight(flights);
 }
