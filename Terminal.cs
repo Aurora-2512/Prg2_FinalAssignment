@@ -53,21 +53,14 @@ namespace FlightInfo
             return true;
         }
 
-        public Airline GetAirlineFromFlight(string fNumber)
+        public Airline GetAirlineFromFlight(Flight flight)
         {
-            if (Flights.ContainsKey(fNumber))
-            {
-                foreach (var airline in Airlines.Values)
-                {
-                    if (airline.Flights.ContainsKey(fNumber))
-                    {
-                        return airline;
-                    }
-                }
-            }
+            if (flight == null || string.IsNullOrEmpty(flight.FlightNumber))
+                return null; // Return null if flight is invalid
 
-            Console.WriteLine($"No airline found for Flight {fNumber}.");
-            return null;
+            string airlineCode = flight.FlightNumber.Substring(0, 2); // Extract first two letters
+            return airlines.ContainsKey(airlineCode) ? airlines[airlineCode] : null;
+            
         }
 
         public void printAirlineFees()

@@ -48,12 +48,37 @@ namespace FlightInfo
 
         public double calculateFees()
         {
-            double fees = 0;
+            double totalFee = 0;
+            int totalFlights = Flights.Count;
+            int discountFlights = 0;
+            int earlyLateFlights = 0;
+            int originDiscountFlights = 0;
+            int normalFlights = 0;
+
             foreach (var flight in Flights.Values)
             {
-                fees += flight.CalculateFees();
+                totalFee += flight.CalculateFees();
+
+                if (flight.ExpectedDateTime.Hour < 11 || flight.ExpectedDateTime.Hour >= 21)
+                    earlyLateFlights++;
+
+               
+                if (flight.Origin== "Dubai (DXB)" || flight.Origin == "Bangkok (BKK)" || flight.Origin == "Tokyo (NRT)")
+                    originDiscountFlights++;
+
+                if (flight is NORMFlight)
+                    normalFlights++;
             }
-            return fees;
+
+            discountFlights = totalFlights / 3;
+            double discount = (discountFlights * 350) + (earlyLateFlights * 110) + (originDiscountFlights * 25) + (normalFlights * 50);
+
+            if (totalFlights > 5)
+            {
+                discount += totalFee * 0.03;
+            }
+
+            return totalFee - discount;
         }
 
         public override string? ToString()
